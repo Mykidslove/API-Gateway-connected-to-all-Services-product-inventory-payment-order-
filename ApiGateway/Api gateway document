@@ -1,0 +1,83 @@
+API Gateway
+Overview
+
+The API Gateway acts as the single entry point for all client requests in the microservices architecture. 
+Instead of calling individual services directly, clients send requests to the API Gateway, which routes them to the appropriate microservice.
+The gateway integrates with Eureka Service Discovery to dynamically locate available service instances,
+eliminating the need for hard-coded service URLs.
+
+
+                Client (Postman / Frontend)
+                          |
+                          |
+                    API Gateway (8080)
+                          |
+      -----------------------------------------
+      |              |              |          |
+      |              |              |          |
+ Product Service  Order Service  Inventory   Payment
+      |                             Service    Service
+      |__________________________________________|
+                     Eureka Server
+
+
+| Path            | Target Service    |
+| --------------- | ----------------- |
+| `/products/**`  | Product Service   |
+| `/orders/**`    | Order Service     |
+| `/inventory/**` | Inventory Service |
+| `/payments/**`  | Payment Service   |
+
+
+Route Configuration
+
+spring.cloud.gateway.server.webmvc.routes[0].id=product-service
+spring.cloud.gateway.server.webmvc.routes[0].uri=lb://PRODUCTSERVICE
+spring.cloud.gateway.server.webmvc.routes[0].predicates[0]=Path=/products/**
+
+spring.cloud.gateway.server.webmvc.routes[1].id=order-service
+spring.cloud.gateway.server.webmvc.routes[1].uri=lb://ORDERSERVICE
+spring.cloud.gateway.server.webmvc.routes[1].predicates[0]=Path=/orders/**
+
+spring.cloud.gateway.server.webmvc.routes[2].id=inventory-service
+spring.cloud.gateway.server.webmvc.routes[2].uri=lb://INVENTORYSERVICE
+spring.cloud.gateway.server.webmvc.routes[2].predicates[0]=Path=/inventory/**
+
+spring.cloud.gateway.server.webmvc.routes[3].id=payment-service
+spring.cloud.gateway.server.webmvc.routes[3].uri=lb://PAYMENTSERVICE
+spring.cloud.gateway.server.webmvc.routes[3].predicates[0]=Path=/payments/**
+
+RequestFlow
+Client
+   |
+   | POST /orders
+   |
+API Gateway
+   |
+   | Route to Order Service
+   |
+Order Service
+   |
+   |-----> Product Service
+   |
+   |-----> Inventory Service
+   |
+   |-----> Payment Service
+   |
+Order Saved
+   |
+API Gateway
+   |
+Client Response
+Whyuse Api Gateway
+without Api Gateway
+Client
+   |
+   |-----> Product Service
+   |
+   |-----> Inventory Service
+   |
+   |-----> Order Service
+   |
+   |-----> Payment Service
+
